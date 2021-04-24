@@ -13,6 +13,7 @@
 # Usaid's stuff
 *.sln
 *.pyproj
+*.csv
 env/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
