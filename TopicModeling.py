@@ -18,35 +18,41 @@ bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdic
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
-state = 'Maryland'
-spellchecked_terms = []
-if not os.path.exists(state + '.pkl'):
-    df = pd.read_csv(state + '.csv')
-    terms = df['Quote']
+state_list = ['Massachussetts', 'South Carolina', 'Virginia', 'Pennsylvania', 'New Hampshire', 'Connecticut', 'Georgia', 'Maryland']
+#state = 'Maryland'
+all_terms = []
+for state in state_list:
+    spellchecked_terms = []
+    try:
+        if not os.path.exists(state + '.pkl'):
+            df = pd.read_csv(state + '.csv', delimiter=',')
+            terms = df['Quote']
 
-    count = 1
-    for term in terms:
-        term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
-        tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
+            count = 1
+            for term in terms:
+                term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
+                tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
 
-        wnl = WordNetLemmatizer()
-        term = " ".join(wnl.lemmatize(t) for t in tokens)
+                wnl = WordNetLemmatizer()
+                term = " ".join(wnl.lemmatize(t) for t in tokens)
 
-        suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
-        corrected = " ".join([str(elem) for elem in suggestions])
-        spellchecked_terms.append(corrected)
-        count += 1
-    with open(state + '.pkl', 'wb') as f:
-        pickle.dump(spellchecked_terms, f)
-else:
-    with open(state + '.pkl', 'rb') as f:
-        spellchecked_terms = pickle.load(f)
-
+                suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
+                corrected = " ".join([str(elem) for elem in suggestions])
+                spellchecked_terms.append(corrected)
+                count += 1
+            with open(state + '.pkl', 'wb') as f:
+                pickle.dump(spellchecked_terms, f)
+        else:
+            with open(state + '.pkl', 'rb') as f:
+                spellchecked_terms = pickle.load(f)
+        all_terms.extend(spellchecked_terms)
+    except Exception:
+        print('Issue with state ' + state)
 # Create a set of frequent words
 stoplist = set('for a of the and to in'.split(' '))
 # Lowercase each document, split it by white space and filter out stopwords
 texts = [[word for word in document.lower().split() if word not in stoplist]
-         for document in spellchecked_terms]
+         for document in all_terms]
 
 # Count word frequencies
 from collections import defaultdict
