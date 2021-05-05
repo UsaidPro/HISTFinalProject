@@ -10,6 +10,7 @@ from nltk import WordNetLemmatizer
 import re
 import pickle
 import os
+from gensim.parsing.preprocessing import preprocess_string
 
 sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
@@ -18,10 +19,13 @@ bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdic
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
-state_list = ['Massachussetts', 'South Carolina', 'Virginia', 'Pennsylvania', 'New Hampshire', 'Connecticut', 'Georgia', 'Maryland']
+initial_state_list = ['Massachussetts', 'SouthCarolina', 'Virginia', 'Pennsylvania', 'NewHampshire', 'Connecticut', 'Georgia', 'Maryland']
+#initial_state_list = ['Massachussetts', 'Virginia', 'Pennsylvania', 'Maryland']
+state_list = []
 #state = 'Maryland'
 all_terms = []
-for state in state_list:
+all_labels = []
+for state in initial_state_list:
     spellchecked_terms = []
     try:
         if not os.path.exists(state + '.pkl'):
@@ -30,29 +34,47 @@ for state in state_list:
 
             count = 1
             for term in terms:
-                term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
-                tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
+                #term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
+                #tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
 
-                wnl = WordNetLemmatizer()
-                term = " ".join(wnl.lemmatize(t) for t in tokens)
+                #wnl = WordNetLemmatizer()
+                #term = " ".join(wnl.lemmatize(t) for t in tokens)
+                term = " ".join(preprocess_string(term))
 
                 suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
                 corrected = " ".join([str(elem) for elem in suggestions])
                 spellchecked_terms.append(corrected)
                 count += 1
+                all_labels.append(" ".join([state for i in range(len(suggestions))]))
             with open(state + '.pkl', 'wb') as f:
                 pickle.dump(spellchecked_terms, f)
         else:
             with open(state + '.pkl', 'rb') as f:
                 spellchecked_terms = pickle.load(f)
+            for term in spellchecked_terms:
+                all_labels.append(" ".join([state for i in term.split()]))
         all_terms.extend(spellchecked_terms)
+        state_list.append(state)
     except Exception:
         print('Issue with state ' + state)
-# Create a set of frequent words
-stoplist = set('for a of the and to in'.split(' '))
-# Lowercase each document, split it by white space and filter out stopwords
-texts = [[word for word in document.lower().split() if word not in stoplist]
-         for document in all_terms]
+## Create a set of frequent words
+#stoplist = set('i for a of the and to in'.split(' '))
+## Lowercase each document, split it by white space and filter out stopwords
+#texts = [[word for word in document.lower().split() if word not in stoplist]
+#         for document in all_terms]
+texts = []
+labels = []
+for i in range(len(all_terms)):
+    word_list = []
+    label_list = []
+    document = all_terms[i]
+    document_split = document.lower().split()
+    labels_split = all_labels[i].split()
+    for j in range(len(document_split)):
+        word_list.append(document_split[j])
+        label_list.append(labels_split[j])
+    texts.append(word_list)
+    labels.append(label_list)
 
 # Count word frequencies
 from collections import defaultdict
@@ -63,37 +85,41 @@ for text in texts:
 
 # Only keep words that appear more than once
 processed_corpus = [[token for token in text if frequency[token] > 1] for text in texts]
-pprint.pprint(processed_corpus)
+processed_corpus = []
+processed_corpus_labels = []
+for i in range(len(texts)):
+    processed_tokens = []
+    processed_labels = []
+    for j in range(len(texts[i])):
+        if frequency[texts[i][j]] > 1:
+            processed_tokens.append(texts[i][j] + '_' + str(state_list.index(labels[i][j])))
+            processed_labels.append(labels[i][j])
+    processed_corpus.append(processed_tokens)
+    processed_corpus_labels.append(processed_labels)
+#pprint.pprint(processed_corpus)
 
 from gensim import corpora
 
 dictionary = corpora.Dictionary(processed_corpus)
-print(dictionary)
+#print(dictionary)
 
-pprint.pprint(dictionary.token2id)
+#pprint.pprint(dictionary.token2id)
 
-new_doc = "Human computer interaction"
-new_vec = dictionary.doc2bow(new_doc.lower().split())
-print(new_vec)
 
 bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
-pprint.pprint(bow_corpus)
+#pprint.pprint(bow_corpus)
 
 from gensim import models
 
 # train the model
 tfidf = models.TfidfModel(bow_corpus)
 
-# transform the "system minors" string
-words = "system minors".lower().split()
-print(tfidf[dictionary.doc2bow(words)])
-
 model = models.Word2Vec(sentences=processed_corpus)
 
-for index, word in enumerate(model.wv.index_to_key):
-    if index == 50:
-        break
-    print(f"word #{index}/{len(model.wv.index_to_key)} is {word}")
+#for index, word in enumerate(model.wv.index_to_key):
+#    if index == 1000:
+#        break
+#    print(f"word #{index}/{len(model.wv.index_to_key)} is {word}")
 
 from sklearn.decomposition import IncrementalPCA    # inital reduction
 from sklearn.manifold import TSNE                   # final reduction
@@ -119,22 +145,35 @@ def reduce_dimensions(model):
 x_vals, y_vals, labels = reduce_dimensions(model)
 
 
-def plot_with_matplotlib(x_vals, y_vals, labels):
-    import matplotlib.pyplot as plt
-    import random
+import matplotlib.pyplot as plt
+import matplotlib
+import random
 
-    random.seed(0)
+random.seed(0)
 
-    plt.figure(figsize=(12, 12))
-    plt.scatter(x_vals, y_vals)
+fig, ax = plt.subplots()
+#plt.figure(figsize=(12, 12))
+colors = [int(label.split('_')[1]) for label in labels]
+color_list = ['red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'purple', 'orange', 'pink']
+for i in range(len(state_list)):
+    x_vals_state = []
+    y_vals_state = []
+    colors_state = []
+    for j in range(len(x_vals)):
+        if colors[j] == i:
+            x_vals_state.append(x_vals[j])
+            y_vals_state.append(y_vals[j])
+            colors_state.append(colors[j])
+    ax.scatter(x_vals_state, y_vals_state, c=color_list[i], label=state_list[i])
+#ax.scatter(x_vals, y_vals, c=colors)
 
-    #
-    # Label randomly subsampled 25 data points
-    #
-    indices = list(range(len(labels)))
-    selected_indices = random.sample(indices, 25)
-    for i in selected_indices:
-        plt.annotate(labels[i], (x_vals[i], y_vals[i]))
-    plt.show()
-
-plot_with_matplotlib(x_vals, y_vals, labels)
+#
+# Label randomly subsampled 25 data points
+#
+indices = list(range(len(labels)))
+selected_indices = random.sample(indices, 100)
+for i in selected_indices:
+    ax.annotate(labels[i].split('_')[0], (x_vals[i], y_vals[i]))
+ax.legend(state_list, loc='lower left')
+#ax.legend(('Massachussetts', 'Virginia', 'Pennsylvania', 'Maryland'), loc='lower left')
+plt.show()
