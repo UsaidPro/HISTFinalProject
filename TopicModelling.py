@@ -1,4 +1,5 @@
 #https://www.machinelearningplus.com/nlp/topic-modeling-gensim-python/
+#https://stackabuse.com/python-for-nlp-working-with-the-gensim-library-part-2/
 
 import pickle
 import gensim
