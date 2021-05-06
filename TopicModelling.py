@@ -46,9 +46,3 @@ doc_lda = lda_model[corpus]
 # Visualize Topics
 vis = pyLDAvis.gensim.prepare(lda_model, corpus, maryland_dict)
 pyLDAvis.save_html(vis, 'Pennsylvania_Visualization.html')
-"""
-os.environ['MALLET_HOME'] = 'C:\\mallet-2.0.8'
-mallet_path = 'C:\\mallet-2.0.8\\bin\\mallet'
-
-ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=20, id2word=maryland_dict)
-"""

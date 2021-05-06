@@ -31,7 +31,7 @@ def preprocess(sentences):
 
     return corrected_sentences
 
-
+"""
 conn_df = pd.read_csv("Connecticut.csv")
 conn_sentences = conn_df['Quote']
 conn_df['Quote'] = preprocess(conn_sentences)
@@ -41,8 +41,8 @@ sc_df = pd.read_csv("South Carolina.csv")
 sc_sentences = sc_df['Quote']
 sc_df['Quote'] = preprocess(sc_sentences)
 print(sc_df)
-
 """
+
 conn_df = pd.read_csv("Connecticut.csv")
 conn_sentences = conn_df['Quote']
 
@@ -58,4 +58,3 @@ p2.start()
 results = []
 results.append(p1)
 results.append(p2)
-"""
