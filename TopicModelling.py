@@ -10,7 +10,7 @@ import pyLDAvis ## Version 2.1.2
 import pyLDAvis.gensim
 import os
 
-with open("Maryland.pkl", "rb") as handle:
+with open("Pennsylvania.pkl", "rb") as handle:
     maryland_df = pickle.load(handle)
 
 maryland_words = [nltk.word_tokenize(sent) for sent in maryland_df]
@@ -29,7 +29,6 @@ read_corpus = [[(maryland_dict[id], freq) for id, freq in cp] for cp in corpus]
 
 
 #Building Topic Model
-"""
 lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                             id2word=maryland_dict,
                                             num_topics=20,
@@ -46,9 +45,10 @@ doc_lda = lda_model[corpus]
 
 # Visualize Topics
 vis = pyLDAvis.gensim.prepare(lda_model, corpus, maryland_dict)
-pyLDAvis.save_html(vis, 'LDA_Visualization.html')"""
-
+pyLDAvis.save_html(vis, 'Pennsylvania_Visualization.html')
+"""
 os.environ['MALLET_HOME'] = 'C:\\mallet-2.0.8'
 mallet_path = 'C:\\mallet-2.0.8\\bin\\mallet'
 
 ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=20, id2word=maryland_dict)
+"""
