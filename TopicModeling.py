@@ -12,51 +12,6 @@ import pickle
 import os
 from gensim.parsing.preprocessing import preprocess_string
 
-sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
-bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
-
-sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
-sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
-
-initial_state_list = ['Massachussetts', 'SouthCarolina', 'Virginia', 'Pennsylvania', 'NewHampshire', 'Connecticut', 'Georgia', 'Maryland']
-#initial_state_list = ['Massachussetts', 'Virginia', 'Pennsylvania', 'Maryland']
-state_list = []
-#state = 'Maryland'
-all_terms = []
-all_labels = []
-for state in initial_state_list:
-    spellchecked_terms = []
-    try:
-        if not os.path.exists(state + '.pkl'):
-            df = pd.read_csv(state + '.csv', delimiter=',')
-            terms = df['Quote']
-
-            count = 1
-            for term in terms:
-                term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
-                tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
-
-                wnl = WordNetLemmatizer()
-                term = " ".join(wnl.lemmatize(t) for t in tokens)
-                #term_processed = " ".join(preprocess_string(term))
-
-                suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
-                corrected = " ".join([str(elem) for elem in suggestions])
-                spellchecked_terms.append(corrected)
-                count += 1
-                all_labels.append(" ".join([state for i in range(len(suggestions))]))
-            with open(state + '.pkl', 'wb') as f:
-                pickle.dump(spellchecked_terms, f)
-        else:
-            with open(state + '.pkl', 'rb') as f:
-                spellchecked_terms = pickle.load(f)
-            for term in spellchecked_terms:
-                all_labels.append(" ".join([state for i in term.split()]))
-        all_terms.extend(spellchecked_terms)
-        state_list.append(state)
-    except Exception:
-        print('Issue with state ' + state)
 # Create a set of frequent words
 STOPWORDS = frozenset([
     'all', 'six', 'just', 'less', 'being', 'indeed', 'over', 'move', 'anyway', 'four', 'not', 'own', 'through',
@@ -88,6 +43,57 @@ STOPWORDS = frozenset([
     'sometimes', 'well', 'amoungst', 'yours', 'their', 'rather', 'without', 'so', 'five', 'the', 'first', 'with',
     'make', 'once'
 ])
+
+sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
+bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+
+sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
+
+initial_state_list = ['Massachussetts', 'SouthCarolina', 'Virginia', 'Pennsylvania', 'NewHampshire', 'Connecticut', 'Georgia', 'Maryland']
+#initial_state_list = ['Massachussetts', 'Virginia', 'Pennsylvania', 'Maryland']
+state_list = []
+#state = 'Maryland'
+all_terms = []
+all_labels = []
+for state in initial_state_list:
+    spellchecked_terms = []
+    try:
+        if not os.path.exists(state + '.pkl'):
+            df = pd.read_csv(state + '.csv', delimiter=',')
+            terms = df['Quote']
+
+            count = 1
+            for term in terms:
+                term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
+                tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
+
+                wnl = WordNetLemmatizer()
+                term = " ".join(wnl.lemmatize(t) for t in tokens)
+                #term_processed = " ".join(preprocess_string(term))
+
+                suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
+                for quote in suggestions:
+                    quote_str = quote._term
+                    spellchecked_terms.append(" ".join([i for i in quote_str.split(' ') if i not in stopwords.words('english') and i not in STOPWORDS]))
+                    all_labels.append(" ".join([state for i in spellchecked_terms[-1].split(' ')]))
+                #corrected = " ".join([str(elem) for elem in suggestions])
+                #spellchecked_terms.append(corrected)
+                count += 1
+                #all_labels.append(" ".join([state for i in range(len(suggestions))]))
+            with open(state + '.pkl', 'wb') as f:
+                pickle.dump(spellchecked_terms, f)
+        else:
+            with open(state + '.pkl', 'rb') as f:
+                spellchecked_terms = pickle.load(f)
+            for term in spellchecked_terms:
+                all_labels.append(" ".join([state for i in term.split()]))
+        all_terms.extend(spellchecked_terms)
+        state_list.append(state)
+    except Exception:
+        print('Issue with state ' + state)
+
 # Lowercase each document, split it by white space and filter out stopwords
 #texts = [[word for word in document.lower().split() if word not in stoplist]
 #         for document in all_terms]
@@ -100,6 +106,7 @@ for i in range(len(all_terms)):
     document_split = document.lower().split()
     labels_split = all_labels[i].split()
     for j in range(len(document_split)):
+        print(document, document_split[j])
         if(document_split[j] not in STOPWORDS):
             word_list.append(document_split[j])
             label_list.append(labels_split[j])
