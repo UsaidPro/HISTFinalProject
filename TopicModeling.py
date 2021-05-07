@@ -106,7 +106,6 @@ for i in range(len(all_terms)):
     document_split = document.lower().split()
     labels_split = all_labels[i].split()
     for j in range(len(document_split)):
-        print(document, document_split[j])
         if(document_split[j] not in STOPWORDS):
             word_list.append(document_split[j])
             label_list.append(labels_split[j])
