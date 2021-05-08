@@ -10,7 +10,7 @@ import pyLDAvis ## Version 2.1.2
 import pyLDAvis.gensim
 import os
 
-with open("Pennsylvania.pkl", "rb") as handle:
+with open("Connecticut.pkl", "rb") as handle:
     maryland_df = pickle.load(handle)
 
 maryland_words = [nltk.word_tokenize(sent) for sent in maryland_df]
@@ -45,4 +45,4 @@ doc_lda = lda_model[corpus]
 
 # Visualize Topics
 vis = pyLDAvis.gensim.prepare(lda_model, corpus, maryland_dict)
-pyLDAvis.save_html(vis, 'Pennsylvania_Visualization.html')
+pyLDAvis.save_html(vis, 'Connecticut_Visualization.html')
