@@ -96,8 +96,110 @@ pyLDAvis.save_html(vis, 'PA_Writers_Visualization.html')
 """
 #######################################
 
+def get_major_writers_pickle():
+    states = ["Connecticut", "Georgia", "Massachussetts", "Pennsylvania", "Maryland", "NewYork", "Virginia"]
+    states_writers = [cn_writers, ga_writers, ma_writers, pa_writers, md_writers, ny_writers, va_writers]
+
+    middle_states = ["Pennsylvania", "NewYork"]
+    middle_writers = [pa_writers, ny_writers]
+
+    southern_states = ["Maryland", "Virginia", "Georgia"]
+    southern_writers = [md_writers, va_writers, ga_writers]
+
+    ne_states = ["Connecticut", "Massachussetts"]
+    ne_writers = [cn_writers, ma_writers]
 
 
+    major_authors = []
+    for i in range(len(states)):
+        state = states[i]
+        file_name = state + ".pkl"
+        csv_name = ".\\csv\\" + state + ".csv"
+
+        with open(file_name, "rb") as handle:
+            state_df = pickle.load(handle)
+
+        state_table = pd.read_csv(csv_name)
+        state_authors = state_table['Author']
+
+        for j in range(len(state_authors)):
+            writers_list = states_writers[i]
+
+            if state_authors[j] in writers_list:
+                print(state_authors[j])
+                major_authors.append(state_df[j])
+
+    with open("MajorWriters.pkl", "wb") as handle:
+        pickle.dump(major_authors, handle)
+
+
+    middle_authors = []
+    for i in range(len(middle_states)):
+        state = middle_states[i]
+        file_name = state + ".pkl"
+        csv_name = ".\\csv\\" + state + ".csv"
+
+        with open(file_name, "rb") as handle:
+            state_df = pickle.load(handle)
+
+        state_table = pd.read_csv(csv_name)
+        state_authors = state_table['Author']
+
+        for j in range(len(state_authors)):
+            writers_list = middle_writers[i]
+
+            if state_authors[j] in writers_list:
+                print(state_authors[j])
+                middle_authors.append(state_df[j])
+
+    with open("MiddleWriters.pkl", "wb") as handle:
+        pickle.dump(middle_authors, handle)
+
+
+    southern_authors = []
+    for i in range(len(southern_states)):
+        state = southern_states[i]
+        file_name = state + ".pkl"
+        csv_name = ".\\csv\\" + state + ".csv"
+
+        with open(file_name, "rb") as handle:
+            state_df = pickle.load(handle)
+
+        state_table = pd.read_csv(csv_name)
+        state_authors = state_table['Author']
+
+        for j in range(len(state_authors)):
+            writers_list = southern_writers[i]
+
+            if state_authors[j] in writers_list:
+                print(state_authors[j])
+                southern_authors.append(state_df[j])
+
+    with open("SouthernWriters.pkl", "wb") as handle:
+        pickle.dump(southern_authors, handle)
+
+
+    ne_authors = []
+    for i in range(len(ne_states)):
+        state = ne_states[i]
+        file_name = state + ".pkl"
+        csv_name = ".\\csv\\" + state + ".csv"
+
+        with open(file_name, "rb") as handle:
+            state_df = pickle.load(handle)
+
+        state_table = pd.read_csv(csv_name)
+        state_authors = state_table['Author']
+
+        for j in range(len(state_authors)):
+            writers_list = ne_writers[i]
+
+            if state_authors[j] in writers_list:
+                print(state_authors[j])
+                ne_authors.append(state_df[j])
+
+    with open("NEWriters.pkl", "wb") as handle:
+        pickle.dump(ne_authors, handle)
 ###################States as a Whole#################################
 
 def compute_coherence_values(state_dict, corpus, texts, limit, start=2, step=3):
@@ -129,11 +231,182 @@ def compute_coherence_values(state_dict, corpus, texts, limit, start=2, step=3):
 
     return model_list, coherence_values
 
+def test_model(dict, texts, corpus):
+    model_list, coherence_values = compute_coherence_values(state_dict=dict, corpus=corpus,
+                                                            texts=texts, start=3,
+                                                            limit=30, step=3)
+    limit = 30
+    start = 3
+    step = 3
+    x = range(start, limit, step)
+    plt.plot(x, coherence_values)
+    plt.xlabel("Num Topics")
+    plt.ylabel("Coherence score")
+    plt.legend(("coherence_values"), loc='best')
+    plt.show()
+
+
+def topic_model_writers():
+    """
+    with open("NEWriters.pkl", "rb") as handle:
+        ne_df = pickle.load(handle)
+
+    ne_words = [nltk.word_tokenize(sent) for sent in ne_df]
+    ne_dict = corpora.Dictionary(ne_words)
+    ne_text = ne_words
+    ne_corpus = [ne_dict.doc2bow(text) for text in ne_text]
+
+    #test_model(ne_dict, ne_text, ne_corpus)
+
+    ne_model = gensim.models.ldamodel.LdaModel(corpus=ne_corpus,
+                                                     id2word=ne_dict,
+                                                     num_topics=18,
+                                                     random_state=100,
+                                                     update_every=1,
+                                                     chunksize=100,
+                                                     passes=10,
+                                                     alpha='auto',
+                                                     per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(ne_model, ne_corpus, ne_dict)
+    pyLDAvis.save_html(vis, fileobj="NEWritersVisualization.html")
+    """
+    """
+    with open("SouthernWriters.pkl", "rb") as handle:
+        southern_df = pickle.load(handle)
+
+    southern_words = [nltk.word_tokenize(sent) for sent in southern_df]
+    southern_dict = corpora.Dictionary(southern_words)
+    southern_text = southern_words
+    southern_corpus = [southern_dict.doc2bow(text) for text in southern_text]
+
+    #test_model(southern_dict, southern_text, southern_corpus)
+
+
+    southern_model = gensim.models.ldamodel.LdaModel(corpus=southern_corpus,
+                                                   id2word=southern_dict,
+                                                   num_topics=18,
+                                                   random_state=100,
+                                                   update_every=1,
+                                                   chunksize=100,
+                                                   passes=10,
+                                                   alpha='auto',
+                                                   per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(southern_model, southern_corpus, southern_dict)
+    pyLDAvis.save_html(vis, fileobj="SouthernWritersVisualization.html")
+    """
+    """
+    with open("MiddleWriters.pkl", "rb") as handle:
+        middle_df = pickle.load(handle)
+
+    middle_words = [nltk.word_tokenize(sent) for sent in middle_df]
+    middle_dict = corpora.Dictionary(middle_words)
+    middle_text = middle_words
+    middle_corpus = [middle_dict.doc2bow(text) for text in middle_text]
+
+    middle_model = gensim.models.ldamodel.LdaModel(corpus=middle_corpus,
+                                                    id2word=middle_dict,
+                                                    num_topics=12,
+                                                    random_state=100,
+                                                    update_every=1,
+                                                    chunksize=100,
+                                                    passes=10,
+                                                    alpha='auto',
+                                                    per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(middle_model, middle_corpus, middle_dict)
+    pyLDAvis.save_html(vis, fileobj="MiddleWritersVisualization.html")
+
+"""
+
+    with open("MajorWriters.pkl", "rb") as handle:
+        writers_df = pickle.load(handle)
+
+    writers_words = [nltk.word_tokenize(sent) for sent in writers_df]
+    writers_dict = corpora.Dictionary(writers_words)
+    writers_texts = writers_words
+    writers_corpus = [writers_dict.doc2bow(text) for text in writers_texts]
+
+    #test_model(writers_dict, writers_texts, writers_corpus)
+
+    writers_model = gensim.models.ldamodel.LdaModel(corpus=writers_corpus,
+                                                    id2word=writers_dict,
+                                                    num_topics=6,
+                                                    random_state=100,
+                                                    update_every=1,
+                                                    chunksize=100,
+                                                    passes=10,
+                                                    alpha='auto',
+                                                    per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(writers_model, writers_corpus, writers_dict)
+    pyLDAvis.save_html(vis, fileobj="WritersVisualization.html")
+
+def elites_and_popular():
+    with open("Elites.pkl", "rb") as handle:
+        elites_df = pickle.load(handle)
+
+    elites_words = [nltk.word_tokenize(sent) for sent in elites_df]
+    elites_dict = corpora.Dictionary(elites_words)
+    elites_texts = elites_words
+    elites_corpus = [elites_dict.doc2bow(text) for text in elites_texts]
+
+    with open("Popular.pkl", "rb") as handle:
+        popular_df = pickle.load(handle)
+
+    popular_words = [nltk.word_tokenize(sent) for sent in popular_df]
+    popular_dict = corpora.Dictionary(popular_words)
+    popular_texts = popular_words
+    popular_corpus = [popular_dict.doc2bow(text) for text in popular_texts]
+
+    elites_model = gensim.models.ldamodel.LdaModel(corpus=elites_corpus,
+                                                id2word=elites_dict,
+                                                num_topics=8,
+                                                random_state=100,
+                                                update_every=1,
+                                                chunksize=100,
+                                                passes=10,
+                                                alpha='auto',
+                                                per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(elites_model, elites_corpus,elites_dict)
+    pyLDAvis.save_html(vis, fileobj="ElitesVisualization.html")
+
+    popular_model = gensim.models.ldamodel.LdaModel(corpus=popular_corpus,
+                                                   id2word=popular_dict,
+                                                   num_topics=20,
+                                                   random_state=100,
+                                                   update_every=1,
+                                                   chunksize=100,
+                                                   passes=10,
+                                                   alpha='auto',
+                                                   per_word_topics=True)
+
+    vis = pyLDAvis.gensim.prepare(popular_model, popular_corpus, popular_dict)
+    pyLDAvis.save_html(vis, fileobj="PopularVisualization.html")
+
+    """
+    model_list, coherence_values = compute_coherence_values(state_dict=elites_dict, corpus=elites_corpus, texts=elites_texts, start=12,
+                                                            limit=45, step=3)
+    limit = 45
+    start = 12
+    step = 3
+    x = range(start, limit, step)
+    plt.plot(x, coherence_values)
+    plt.xlabel("Num Topics")
+    plt.ylabel("Coherence score")
+    plt.legend(("coherence_values"), loc='best')
+    plt.show()"""
 
 if __name__ == '__main__':
     freeze_support()
 
-    with open("Maryland.pkl", "rb") as handle:
+    #get_major_writers_pickle()
+    topic_model_writers()
+
+    """
+    with open("Virginia.pkl", "rb") as handle:
         state_df = pickle.load(handle)
 
     state_words = [nltk.word_tokenize(sent) for sent in state_df]
@@ -150,41 +423,24 @@ if __name__ == '__main__':
     # Human Readable form of the Above
     read_corpus = [[(state_dict[id], freq) for id, freq in cp] for cp in corpus]
 
-    """
+
     #Building Topic Model
     lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                                 id2word=state_dict,
-                                                num_topics=20,
+                                                num_topics=18,
                                                 random_state=100,
                                                 update_every=1,
                                                 chunksize=100,
-                                                passes=10,
+                                                passes=20,
                                                 alpha='auto',
                                                 per_word_topics=True)
-    
-    
-    print(lda_model.print_topics())
-    doc_lda = lda_model[corpus]
-    
-    # Visualize Topics
+
     vis = pyLDAvis.gensim.prepare(lda_model, corpus, state_dict)
-    pyLDAvis.save_html(vis, 'Pennsylvania_Visualization.html')
-
-    """
-
-    model_list, coherence_values = compute_coherence_values(state_dict=state_dict, corpus=corpus, texts=texts, start=2,
-                                                            limit=40, step=6)
-    limit = 40
-    start = 2
-    step = 6
-    x = range(start, limit, step)
-    plt.plot(x, coherence_values)
-    plt.xlabel("Num Topics")
-    plt.ylabel("Coherence score")
-    plt.legend(("coherence_values"), loc='best')
-    plt.show()
+    pyLDAvis.save_html(vis, fileobj="VirginiaVisualization.html")
 
 
+    #test_model(state_dict, texts, corpus)
+"""
 
 
 
