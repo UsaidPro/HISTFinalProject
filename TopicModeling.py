@@ -59,40 +59,37 @@ all_terms = []
 all_labels = []
 for state in initial_state_list:
     spellchecked_terms = []
-    try:
-        if not os.path.exists(state + '.pkl'):
-            df = pd.read_csv(state + '.csv', delimiter=',')
-            terms = df['Quote']
+    if not os.path.exists(state + '.pkl'):
+        df = pd.read_csv(state + '.csv', delimiter=',')
+        terms = df['Quote']
 
-            count = 1
-            for term in terms:
-                term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
-                tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
+        count = 1
+        for term in terms:
+            term = re.sub(r'[.?!,:;()\-\n\d]', ' ', term)
+            tokens = [t.lower() for t in word_tokenize(term) if t not in stopwords.words('english')]
 
-                wnl = WordNetLemmatizer()
-                term = " ".join(wnl.lemmatize(t) for t in tokens)
-                #term_processed = " ".join(preprocess_string(term))
+            wnl = WordNetLemmatizer()
+            term = " ".join(wnl.lemmatize(t) for t in tokens)
+            #term_processed = " ".join(preprocess_string(term))
 
-                suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
-                for quote in suggestions:
-                    quote_str = quote._term
-                    spellchecked_terms.append(" ".join([i for i in quote_str.split(' ') if i not in stopwords.words('english') and i not in STOPWORDS]))
-                    all_labels.append(" ".join([state for i in spellchecked_terms[-1].split(' ')]))
-                #corrected = " ".join([str(elem) for elem in suggestions])
-                #spellchecked_terms.append(corrected)
-                count += 1
-                #all_labels.append(" ".join([state for i in range(len(suggestions))]))
-            with open(state + '.pkl', 'wb') as f:
-                pickle.dump(spellchecked_terms, f)
-        else:
-            with open(state + '.pkl', 'rb') as f:
-                spellchecked_terms = pickle.load(f)
-            for term in spellchecked_terms:
-                all_labels.append(" ".join([state for i in term.split()]))
-        all_terms.extend(spellchecked_terms)
-        state_list.append(state)
-    except Exception:
-        print('Issue with state ' + state)
+            suggestions = sym_spell.lookup_compound(term, max_edit_distance=2)
+            for quote in suggestions:
+                quote_str = quote._term
+                spellchecked_terms.append(" ".join([i for i in quote_str.split(' ') if i not in stopwords.words('english') and i not in STOPWORDS]))
+                all_labels.append(" ".join([state for i in spellchecked_terms[-1].split(' ')]))
+            #corrected = " ".join([str(elem) for elem in suggestions])
+            #spellchecked_terms.append(corrected)
+            count += 1
+            #all_labels.append(" ".join([state for i in range(len(suggestions))]))
+        with open(state + '.pkl', 'wb') as f:
+            pickle.dump(spellchecked_terms, f)
+    else:
+        with open(state + '.pkl', 'rb') as f:
+            spellchecked_terms = pickle.load(f)
+        for term in spellchecked_terms:
+            all_labels.append(" ".join([state for i in term.split()]))
+    all_terms.extend(spellchecked_terms)
+    state_list.append(state)
 
 # Lowercase each document, split it by white space and filter out stopwords
 #texts = [[word for word in document.lower().split() if word not in stoplist]
