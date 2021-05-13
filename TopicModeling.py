@@ -51,7 +51,7 @@ bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdic
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
-initial_state_list = ['Massachussetts', 'SouthCarolina', 'Virginia', 'Pennsylvania', 'NewHampshire', 'Connecticut', 'Georgia', 'Maryland']
+initial_state_list = ['Massachussetts', 'SouthCarolina', 'Virginia', 'Pennsylvania', 'NewHampshire', 'Connecticut', 'Georgia', 'Maryland', 'NewYork']
 #initial_state_list = ['Massachussetts', 'Virginia', 'Pennsylvania', 'Maryland']
 state_list = []
 #state = 'Maryland'
@@ -190,7 +190,7 @@ random.seed(0)
 fig, ax = plt.subplots()
 #plt.figure(figsize=(12, 12))
 colors = [int(label.split('_')[1]) for label in labels]
-color_list = ['red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'purple', 'orange', 'pink']
+color_list = ['red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'purple', 'orange', 'pink','magenta']
 for i in range(len(state_list)):
     x_vals_state = []
     y_vals_state = []
